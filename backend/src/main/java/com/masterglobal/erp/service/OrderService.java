@@ -1,16 +1,20 @@
 package com.masterglobal.erp.service;
 
+import com.masterglobal.erp.dto.ChargeDto;
+import com.masterglobal.erp.dto.OrderResponseDto;
 import com.masterglobal.erp.dto.OrderSummaryReportDto;
 import com.masterglobal.erp.entity.Order;
 import com.masterglobal.erp.repository.OrderRepository;
 import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import com.masterglobal.erp.dto.ChargeDto;
-import com.masterglobal.erp.dto.OrderResponseDto;
-import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.io.ByteArrayOutputStream;
 import java.util.List;
@@ -21,6 +25,9 @@ public class OrderService {
     @Autowired
     private OrderRepository orderRepo;
 
+    // =========================
+    // SAVE ORDER (BACKEND DOES ALL CALCULATIONS)
+    // =========================
     @Transactional
     public Order saveOrder(Order order) {
 
@@ -28,28 +35,53 @@ public class OrderService {
             order.getDetails().forEach(d -> d.setOrder(order));
         }
 
+        if (order.getContainers() != null) {
+            order.getContainers().forEach(c -> c.setOrder(order));
+        }
+
         if (order.getCharges() != null) {
             order.getCharges().forEach(c -> {
                 c.setOrder(order);
 
+                // -------- VALIDATIONS --------
+                if (c.getQty() == null || c.getQty() <= 0) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Quantity must be greater than 0");
+                }
+                if (c.getSaleRate() == null || c.getSaleRate() < 0) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Sale rate cannot be negative");
+                }
+                if (c.getCostRate() == null || c.getCostRate() < 0) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cost rate cannot be negative");
+                }
+                if (c.getVatPercent() == null || c.getVatPercent() < 0 || c.getVatPercent() > 100) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "VAT % must be between 0 and 100");
+                }
+
+                // -------- CALCULATIONS (SOURCE OF TRUTH = BACKEND) --------
                 double saleAmount = c.getQty() * c.getSaleRate();
                 double costAmount = c.getQty() * c.getCostRate();
 
                 double vatSale = (saleAmount * c.getVatPercent()) / 100;
                 double vatCost = (costAmount * c.getVatPercent()) / 100;
 
+                double totalSale = saleAmount + vatSale;
+                double totalCost = costAmount + vatCost;
+
                 c.setSaleAmount(saleAmount);
                 c.setCostAmount(costAmount);
                 c.setVatSale(vatSale);
                 c.setVatCost(vatCost);
-                c.setTotalSale(saleAmount + vatSale);
-                c.setTotalCost(costAmount + vatCost);
+                c.setTotalSale(totalSale);
+                c.setTotalCost(totalCost);
             });
         }
 
         return orderRepo.save(order);
     }
 
+    // =========================
+    // LIST ORDERS (DTO)
+    // =========================
     public List<OrderResponseDto> findAllDto() {
         return orderRepo.findAll().stream().map(order -> {
             OrderResponseDto dto = new OrderResponseDto();
@@ -96,6 +128,9 @@ public class OrderService {
         }).toList();
     }
 
+    // =========================
+    // SUMMARY REPORT
+    // =========================
     public List<OrderSummaryReportDto> getOrderSummaryReport() {
         return orderRepo.findAll().stream().map(order -> {
 
@@ -126,13 +161,15 @@ public class OrderService {
         }).toList();
     }
 
+    // =========================
+    // EXPORT EXCEL
+    // =========================
     public ByteArrayResource exportSummaryToExcel() {
         List<OrderSummaryReportDto> data = getOrderSummaryReport();
 
         try (Workbook workbook = new XSSFWorkbook()) {
             Sheet sheet = workbook.createSheet("Order Summary");
 
-            // Header row
             Row header = sheet.createRow(0);
             String[] columns = {
                     "Order Number", "Execution Date", "Customer",
@@ -144,7 +181,6 @@ public class OrderService {
                 header.createCell(i).setCellValue(columns[i]);
             }
 
-            // Data rows
             int rowIdx = 1;
             for (OrderSummaryReportDto r : data) {
                 Row row = sheet.createRow(rowIdx++);
@@ -167,6 +203,9 @@ public class OrderService {
         }
     }
 
+    // =========================
+    // EXPORT XML
+    // =========================
     public String exportSummaryToXml() {
         List<OrderSummaryReportDto> data = getOrderSummaryReport();
 
@@ -189,6 +228,4 @@ public class OrderService {
         xml.append("</orders>");
         return xml.toString();
     }
-
 }
-
