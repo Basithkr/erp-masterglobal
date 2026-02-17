@@ -10,12 +10,16 @@ import org.springframework.http.HttpStatus;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
 
     @Autowired
     private AppUserRepository userRepo;
+
+    private BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     @PostMapping("/login")
     public Map<String, String> login(@RequestBody Map<String, String> req) {
@@ -25,14 +29,14 @@ public class AuthController {
         AppUser user = userRepo.findByUsername(username)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid username or password"));
 
-        // ⚠️ Plain text check for now (for demo)
-        if (!user.getPassword().equals(password)) {
+        // ✅ Compare raw password with bcrypt hash
+        if (!passwordEncoder.matches(password, user.getPassword())) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid username or password");
         }
 
-        // Fake token (just to satisfy frontend)
         Map<String, String> res = new HashMap<>();
         res.put("token", "demo-token-" + user.getUsername());
         return res;
     }
 }
+
