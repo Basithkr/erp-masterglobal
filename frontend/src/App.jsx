@@ -5,6 +5,8 @@ import Customers from "./pages/Customers";
 import Orders from "./pages/Orders";
 import Reports from "./pages/Reports";
 import CreateOrder from "./pages/CreateOrder";
+import ViewOrder from "./pages/ViewOrder";
+
 
 
 function PrivateRoute({ children }) {
@@ -34,6 +36,7 @@ function App() {
           <Route path="customers" element={<Customers />} />
           <Route path="create-order" element={<CreateOrder />} />
           <Route path="orders" element={<Orders />} />
+          <Route path="orders/:id" element={<ViewOrder />} />
           <Route path="reports" element={<Reports />} />
         </Route>
 
