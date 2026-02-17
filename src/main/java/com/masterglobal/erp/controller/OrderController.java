@@ -1,56 +1,57 @@
 package com.masterglobal.erp.controller;
 
 import com.masterglobal.erp.dto.OrderResponseDto;
-import com.masterglobal.erp.dto.OrderSummaryReportDto;
 import com.masterglobal.erp.entity.Order;
 import com.masterglobal.erp.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/orders")
-@CrossOrigin
+@CrossOrigin(origins = "http://localhost:5173")
 public class OrderController {
 
     @Autowired
-    private OrderService service;
+    private OrderService orderService;
 
     @PostMapping
     public Order create(@RequestBody Order order) {
-        return service.saveOrder(order);
+        return orderService.saveOrder(order);
     }
 
     @GetMapping
     public List<OrderResponseDto> list() {
-        return service.findAllDto();
+        return orderService.findAllDto();
     }
 
     @GetMapping("/report/summary")
-    public List<OrderSummaryReportDto> summaryReport() {
-        return service.getOrderSummaryReport();
+    public List<?> summary() {
+        return orderService.getOrderSummaryReport();
     }
 
     @GetMapping("/report/export/excel")
     public ResponseEntity<ByteArrayResource> exportExcel() {
-        ByteArrayResource file = service.exportSummaryToExcel();
+        ByteArrayResource resource = orderService.exportSummaryToExcel();
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=order-summary.xlsx")
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                .body(file);
+                .body(resource);
     }
 
-    @GetMapping(value = "/report/export/xml", produces = MediaType.APPLICATION_XML_VALUE)
-    public String exportXml() {
-        return service.exportSummaryToXml();
-    }
+    @GetMapping("/report/export/xml")
+    public ResponseEntity<String> exportXml() {
+        String xml = orderService.exportSummaryToXml();
 
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=order-summary.xml")
+                .contentType(MediaType.APPLICATION_XML)
+                .body(xml);
+    }
 }
-

@@ -1,10 +1,12 @@
 package com.masterglobal.erp.entity;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity
-@Data
+@Getter
+@Setter
 public class AppUser {
 
     @Id
@@ -14,7 +16,7 @@ public class AppUser {
     @Column(unique = true)
     private String username;
 
-    private String password; // store encoded later
+    private String password; // plain text for now (demo)
+
     private String role; // ADMIN, USER
 }
-
