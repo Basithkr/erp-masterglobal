@@ -30,6 +30,12 @@ public class OrderController {
         return orderService.findAllDto();
     }
 
+    // ✅ NEW: Get single order with full details
+    @GetMapping("/{id}")
+    public OrderResponseDto getById(@PathVariable Long id) {
+        return orderService.findByIdDto(id);
+    }
+
     @GetMapping("/report/summary")
     public List<?> summary() {
         return orderService.getOrderSummaryReport();

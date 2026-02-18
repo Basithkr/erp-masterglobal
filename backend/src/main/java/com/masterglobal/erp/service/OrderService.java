@@ -57,7 +57,7 @@ public class OrderService {
                     throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "VAT % must be between 0 and 100");
                 }
 
-                // -------- CALCULATIONS (SOURCE OF TRUTH = BACKEND) --------
+                // -------- CALCULATIONS --------
                 double saleAmount = c.getQty() * c.getSaleRate();
                 double costAmount = c.getQty() * c.getCostRate();
 
@@ -83,49 +83,64 @@ public class OrderService {
     // LIST ORDERS (DTO)
     // =========================
     public List<OrderResponseDto> findAllDto() {
-        return orderRepo.findAll().stream().map(order -> {
-            OrderResponseDto dto = new OrderResponseDto();
+        return orderRepo.findAll().stream().map(this::mapToDto).toList();
+    }
 
-            dto.setId(order.getId());
-            dto.setOrderNumber(order.getOrderNumber());
-            dto.setOrderDate(order.getOrderDate());
-            dto.setExecutionDate(order.getExecutionDate());
-            dto.setCustomerCode(order.getCustomerCode());
-            dto.setCustomerName(order.getCustomerName());
+    // =========================
+    // GET SINGLE ORDER (DTO)
+    // =========================
+    public OrderResponseDto findByIdDto(Long id) {
+        Order order = orderRepo.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found"));
 
-            double totalSale = 0;
-            double totalCost = 0;
+        return mapToDto(order);
+    }
 
-            if (order.getCharges() != null) {
-                var chargeDtos = order.getCharges().stream().map(c -> {
-                    ChargeDto cd = new ChargeDto();
-                    cd.setBillNumber(c.getBillNumber());
-                    cd.setChargeCode(c.getChargeCode());
-                    cd.setQty(c.getQty());
-                    cd.setSaleRate(c.getSaleRate());
-                    cd.setCostRate(c.getCostRate());
-                    cd.setSaleAmount(c.getSaleAmount());
-                    cd.setCostAmount(c.getCostAmount());
-                    cd.setVatPercent(c.getVatPercent());
-                    cd.setVatSale(c.getVatSale());
-                    cd.setVatCost(c.getVatCost());
-                    cd.setTotalSale(c.getTotalSale());
-                    cd.setTotalCost(c.getTotalCost());
-                    return cd;
-                }).toList();
+    // =========================
+    // COMMON MAPPER
+    // =========================
+    private OrderResponseDto mapToDto(Order order) {
+        OrderResponseDto dto = new OrderResponseDto();
 
-                dto.setCharges(chargeDtos);
+        dto.setId(order.getId());
+        dto.setOrderNumber(order.getOrderNumber());
+        dto.setOrderDate(order.getOrderDate());
+        dto.setExecutionDate(order.getExecutionDate());
+        dto.setCustomerCode(order.getCustomerCode());
+        dto.setCustomerName(order.getCustomerName());
 
-                totalSale = order.getCharges().stream().mapToDouble(c -> c.getTotalSale()).sum();
-                totalCost = order.getCharges().stream().mapToDouble(c -> c.getTotalCost()).sum();
-            }
+        double totalSale = 0;
+        double totalCost = 0;
 
-            dto.setTotalSale(totalSale);
-            dto.setTotalCost(totalCost);
-            dto.setNetAmount(totalSale - totalCost);
+        if (order.getCharges() != null) {
+            var chargeDtos = order.getCharges().stream().map(c -> {
+                ChargeDto cd = new ChargeDto();
+                cd.setBillNumber(c.getBillNumber());
+                cd.setChargeCode(c.getChargeCode());
+                cd.setQty(c.getQty());
+                cd.setSaleRate(c.getSaleRate());
+                cd.setCostRate(c.getCostRate());
+                cd.setSaleAmount(c.getSaleAmount());
+                cd.setCostAmount(c.getCostAmount());
+                cd.setVatPercent(c.getVatPercent());
+                cd.setVatSale(c.getVatSale());
+                cd.setVatCost(c.getVatCost());
+                cd.setTotalSale(c.getTotalSale());
+                cd.setTotalCost(c.getTotalCost());
+                return cd;
+            }).toList();
 
-            return dto;
-        }).toList();
+            dto.setCharges(chargeDtos);
+
+            totalSale = order.getCharges().stream().mapToDouble(c -> c.getTotalSale()).sum();
+            totalCost = order.getCharges().stream().mapToDouble(c -> c.getTotalCost()).sum();
+        }
+
+        dto.setTotalSale(totalSale);
+        dto.setTotalCost(totalCost);
+        dto.setNetAmount(totalSale - totalCost);
+
+        return dto;
     }
 
     // =========================
