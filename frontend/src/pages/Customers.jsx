@@ -47,7 +47,7 @@ function Customers() {
       ...form,
       documents: [
         ...form.documents,
-        { documentType: "", notes: "", fileName: "" },
+        { documentType: "", notes: "", file: null },
       ],
     });
   };
@@ -222,7 +222,7 @@ function Customers() {
             <tr>
               <th>Document Type</th>
               <th>Notes</th>
-              <th>File Name</th>
+              <th>File</th>
             </tr>
           </thead>
           <tbody>
@@ -248,9 +248,10 @@ function Customers() {
                 </td>
                 <td>
                   <input
+                    type="file"
                     onChange={(e) => {
                       const arr = [...form.documents];
-                      arr[i].fileName = e.target.value;
+                      arr[i].file = e.target.files[0];
                       setForm({ ...form, documents: arr });
                     }}
                   />
@@ -306,15 +307,6 @@ function Customers() {
 
           <h4>Addresses</h4>
           <table className="table">
-            <thead>
-              <tr>
-                <th>Address</th>
-                <th>City</th>
-                <th>State</th>
-                <th>Country</th>
-                <th>Telephone</th>
-              </tr>
-            </thead>
             <tbody>
               {selected.addresses?.map((a, i) => (
                 <tr key={i}>
@@ -330,12 +322,6 @@ function Customers() {
 
           <h4>Contacts</h4>
           <table className="table">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Number</th>
-              </tr>
-            </thead>
             <tbody>
               {selected.contacts?.map((c, i) => (
                 <tr key={i}>
@@ -348,21 +334,20 @@ function Customers() {
 
           <h4>Documents</h4>
           <table className="table">
-            <thead>
-              <tr>
-                <th>Type</th>
-                <th>Notes</th>
-                <th>File</th>
-              </tr>
-            </thead>
             <tbody>
-              {selected.documents?.map((d, i) => (
-                <tr key={i}>
-                  <td>{d.documentType}</td>
-                  <td>{d.notes}</td>
-                  <td>{d.fileName}</td>
+              {selected.documents?.length > 0 ? (
+                selected.documents.map((d, i) => (
+                  <tr key={i}>
+                    <td>{d.documentType}</td>
+                    <td>{d.notes}</td>
+                    <td>{d.fileName || "-"}</td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="3">No documents uploaded</td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
 
