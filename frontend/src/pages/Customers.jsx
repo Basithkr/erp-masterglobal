@@ -53,7 +53,40 @@ function Customers() {
   };
 
   const save = async () => {
-    await api.post("/customers", form);
+    // 1. Save customer (without files)
+    const customerPayload = {
+      code: form.code,
+      name: form.name,
+      email: form.email,
+      phone: form.phone,
+      salesPerson: form.salesPerson,
+      addresses: form.addresses,
+      contacts: form.contacts,
+      documents: [] // important: don't send files here
+    };
+
+    const res = await api.post("/customers", customerPayload);
+    const savedCustomer = res.data;
+
+    // 2. Upload documents one by one (multipart)
+    for (const d of form.documents) {
+      if (d.file) {
+        const fd = new FormData();
+        fd.append("documentType", d.documentType);
+        fd.append("notes", d.notes);
+        fd.append("file", d.file);
+
+        await api.post(
+          `/customers/${savedCustomer.id}/documents/upload`,
+          fd,
+          {
+            headers: { "Content-Type": "multipart/form-data" }
+          }
+        );
+      }
+    }
+
+    // 3. Reset form
     setForm({
       code: "",
       name: "",
@@ -64,6 +97,8 @@ function Customers() {
       contacts: [],
       documents: [],
     });
+
+    // 4. Reload list
     load();
     alert("Customer saved!");
   };
@@ -340,7 +375,20 @@ function Customers() {
                   <tr key={i}>
                     <td>{d.documentType}</td>
                     <td>{d.notes}</td>
-                    <td>{d.fileName || "-"}</td>
+                   <td>
+                     {d.fileName ? (
+                       <a
+                         href={`${api.defaults.baseURL}/customers/documents/download/${d.storedFileName}`}
+                         target="_blank"
+                         rel="noopener noreferrer"
+                         style={{ textDecoration: "underline", color: "#1d4ed8" }}
+                       >
+                         {d.fileName}
+                       </a>
+                     ) : (
+                       "-"
+                     )}
+                   </td>
                   </tr>
                 ))
               ) : (
