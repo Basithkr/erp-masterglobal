@@ -16,7 +16,12 @@ public class CustomerDocument {
 
     private String documentType;
     private String notes;
-    private String fileName; // for now just store file name
+
+    // Original file name (for display)
+    private String fileName;
+
+    // Actual stored file name on disk (for download)
+    private String storedFileName;
 
     @ManyToOne
     @JoinColumn(name = "customer_id")

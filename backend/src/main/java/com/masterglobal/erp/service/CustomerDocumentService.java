@@ -42,20 +42,33 @@ public class CustomerDocumentService {
                 dir.mkdirs();
             }
 
-            String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
-            Path path = Paths.get(UPLOAD_DIR + fileName);
+            String storedFileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
+            Path path = Paths.get(UPLOAD_DIR + storedFileName);
             Files.write(path, file.getBytes());
 
             CustomerDocument doc = new CustomerDocument();
             doc.setDocumentType(documentType);
             doc.setNotes(notes);
-            doc.setFileName(file.getOriginalFilename());
+            doc.setFileName(file.getOriginalFilename()); // for UI
+            doc.setStoredFileName(storedFileName);       // for download
             doc.setCustomer(customer);
 
             return documentRepository.save(doc);
 
         } catch (IOException e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "File upload failed");
+        }
+    }
+
+    public byte[] downloadFile(String storedFileName) {
+        try {
+            Path path = Paths.get(UPLOAD_DIR + storedFileName);
+            if (!Files.exists(path)) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "File not found");
+            }
+            return Files.readAllBytes(path);
+        } catch (IOException e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "File download failed");
         }
     }
 }

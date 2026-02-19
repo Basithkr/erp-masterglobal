@@ -5,6 +5,9 @@ import com.masterglobal.erp.entity.CustomerDocument;
 import com.masterglobal.erp.service.CustomerDocumentService;
 import com.masterglobal.erp.service.CustomerService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -45,5 +48,16 @@ public class CustomerController {
             @RequestParam("file") MultipartFile file
     ) {
         return documentService.uploadDocument(id, documentType, notes, file);
+    }
+
+    // ===== Download Document =====
+    @GetMapping("/documents/download/{storedFileName}")
+    public ResponseEntity<byte[]> downloadDocument(@PathVariable String storedFileName) {
+        byte[] fileData = documentService.downloadFile(storedFileName);
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + storedFileName + "\"")
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .body(fileData);
     }
 }
