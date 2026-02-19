@@ -2,21 +2,27 @@ package com.masterglobal.erp.config;
 
 import com.masterglobal.erp.entity.AppUser;
 import com.masterglobal.erp.repository.AppUserRepository;
-import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Configuration
 public class DataInitializer {
 
     @Bean
-    CommandLineRunner initUsers(AppUserRepository userRepo, PasswordEncoder passwordEncoder) {
+    PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    CommandLineRunner initUsers(AppUserRepository userRepo, PasswordEncoder encoder) {
         return args -> {
             if (userRepo.findByUsername("admin").isEmpty()) {
                 AppUser user = new AppUser();
                 user.setUsername("admin");
-                user.setPassword(passwordEncoder.encode("admin123")); // ✅ ENCODED
+                user.setPassword(encoder.encode("admin123")); // ✅ BCrypt encoded
                 user.setRole("ADMIN");
                 userRepo.save(user);
 
