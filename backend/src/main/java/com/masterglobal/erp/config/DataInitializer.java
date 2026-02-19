@@ -5,17 +5,18 @@ import com.masterglobal.erp.repository.AppUserRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Configuration
 public class DataInitializer {
 
     @Bean
-    CommandLineRunner initUsers(AppUserRepository userRepo) {
+    CommandLineRunner initUsers(AppUserRepository userRepo, PasswordEncoder passwordEncoder) {
         return args -> {
             if (userRepo.findByUsername("admin").isEmpty()) {
                 AppUser user = new AppUser();
                 user.setUsername("admin");
-                user.setPassword("admin123"); // demo only
+                user.setPassword(passwordEncoder.encode("admin123")); // ✅ ENCODED
                 user.setRole("ADMIN");
                 userRepo.save(user);
 
