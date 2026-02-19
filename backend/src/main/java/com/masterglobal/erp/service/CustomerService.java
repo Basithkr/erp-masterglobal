@@ -28,9 +28,18 @@ public class CustomerService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Customer name already exists");
         }
 
+        if (c.getAddresses() != null) {
+            c.getAddresses().forEach(a -> a.setCustomer(c));
+        }
+        if (c.getContacts() != null) {
+            c.getContacts().forEach(ct -> ct.setCustomer(c));
+        }
+        if (c.getDocuments() != null) {
+            c.getDocuments().forEach(d -> d.setCustomer(c));
+        }
+
         Customer saved = repo.save(c);
 
-        // Send email safely
         try {
             if (saved.getEmail() != null && !saved.getEmail().isEmpty()) {
                 emailService.sendCustomerWelcomeMail(saved.getEmail(), saved.getName());
@@ -46,12 +55,10 @@ public class CustomerService {
         Customer existing = repo.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Customer not found"));
 
-        // Check code uniqueness (if changed)
         if (!existing.getCode().equals(c.getCode()) && repo.existsByCode(c.getCode())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Customer code already exists");
         }
 
-        // Check name uniqueness (if changed)
         if (!existing.getName().equals(c.getName()) && repo.existsByName(c.getName())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Customer name already exists");
         }
@@ -60,10 +67,22 @@ public class CustomerService {
         existing.setName(c.getName());
         existing.setPhone(c.getPhone());
         existing.setEmail(c.getEmail());
-        existing.setCountry(c.getCountry());
-        existing.setCity(c.getCity());
-        existing.setState(c.getState());
         existing.setSalesPerson(c.getSalesPerson());
+
+        existing.getAddresses().clear();
+        if (c.getAddresses() != null) {
+            c.getAddresses().forEach(a -> { a.setCustomer(existing); existing.getAddresses().add(a); });
+        }
+
+        existing.getContacts().clear();
+        if (c.getContacts() != null) {
+            c.getContacts().forEach(ct -> { ct.setCustomer(existing); existing.getContacts().add(ct); });
+        }
+
+        existing.getDocuments().clear();
+        if (c.getDocuments() != null) {
+            c.getDocuments().forEach(d -> { d.setCustomer(existing); existing.getDocuments().add(d); });
+        }
 
         return repo.save(existing);
     }

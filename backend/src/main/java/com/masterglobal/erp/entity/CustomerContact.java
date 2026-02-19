@@ -8,19 +8,17 @@ import lombok.Setter;
 @Entity
 @Getter
 @Setter
-public class Container {
+public class CustomerContact {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String billNumber;
-    private String containerNumber;
-    private String sealNumber;
-    private Double weight;
+    private String contactName;
+    private String contactNumber;
 
     @ManyToOne
-    @JoinColumn(name = "order_id")
+    @JoinColumn(name = "customer_id")
     @JsonIgnore
-    private Order order;
+    private Customer customer;
 }

@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { api } from "../api";
+import { useNavigate } from "react-router-dom";
 
 function Orders() {
   const [list, setList] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     api.get("/orders").then(res => setList(res.data));
@@ -25,7 +27,11 @@ function Orders() {
           </thead>
           <tbody>
             {list.map(o => (
-              <tr key={o.id}>
+              <tr
+                key={o.id}
+                style={{ cursor: "pointer" }}
+                onClick={() => navigate(`/orders/${o.id}`)}
+              >
                 <td>{o.orderNumber}</td>
                 <td>{o.customerName}</td>
                 <td>{o.totalSale}</td>

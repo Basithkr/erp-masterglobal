@@ -8,19 +8,18 @@ import lombok.Setter;
 @Entity
 @Getter
 @Setter
-public class Container {
+public class CustomerDocument {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String billNumber;
-    private String containerNumber;
-    private String sealNumber;
-    private Double weight;
+    private String documentType;
+    private String notes;
+    private String fileName; // for now just store file name
 
     @ManyToOne
-    @JoinColumn(name = "order_id")
+    @JoinColumn(name = "customer_id")
     @JsonIgnore
-    private Order order;
+    private Customer customer;
 }
