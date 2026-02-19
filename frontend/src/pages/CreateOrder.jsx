@@ -16,18 +16,39 @@ function CreateOrder() {
     charges: [],
   });
 
+  const [errors, setErrors] = useState({});
+
+  // -------- VALIDATION ----------
+  const validate = () => {
+    const newErrors = {};
+
+    if (!order.orderNumber.trim()) {
+      newErrors.orderNumber = "Order Number is required";
+    }
+
+    if (!order.customerCode.trim()) {
+      newErrors.customerCode = "Customer Code is required";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   // -------- BL DETAILS ----------
   const addDetail = () => {
     setOrder({
       ...order,
-      details: [...order.details, {
-        billOfLadingNo: "",
-        marks: "",
-        description: "",
-        qty: 0,
-        weight: 0,
-        volume: 0,
-      }]
+      details: [
+        ...order.details,
+        {
+          billOfLadingNo: "",
+          marks: "",
+          description: "",
+          qty: 0,
+          weight: 0,
+          volume: 0,
+        },
+      ],
     });
   };
 
@@ -41,12 +62,15 @@ function CreateOrder() {
   const addContainer = () => {
     setOrder({
       ...order,
-      containers: [...order.containers, {
-        billNumber: "",
-        containerNumber: "",
-        sealNumber: "",
-        weight: 0,
-      }]
+      containers: [
+        ...order.containers,
+        {
+          billNumber: "",
+          containerNumber: "",
+          sealNumber: "",
+          weight: 0,
+        },
+      ],
     });
   };
 
@@ -62,7 +86,14 @@ function CreateOrder() {
       ...order,
       charges: [
         ...order.charges,
-        { billNumber: "", chargeCode: "", qty: 1, saleRate: 0, costRate: 0, vatPercent: 5 },
+        {
+          billNumber: "",
+          chargeCode: "",
+          qty: 1,
+          saleRate: 0,
+          costRate: 0,
+          vatPercent: 5,
+        },
       ],
     });
   };
@@ -73,7 +104,34 @@ function CreateOrder() {
     setOrder({ ...order, charges: arr });
   };
 
+  // -------- LIVE TOTAL CALCULATIONS ----------
+  const totals = order.charges.reduce(
+    (acc, c) => {
+      const qty = c.qty || 0;
+      const saleRate = c.saleRate || 0;
+      const costRate = c.costRate || 0;
+      const vat = c.vatPercent || 0;
+
+      const saleAmount = qty * saleRate;
+      const costAmount = qty * costRate;
+
+      const vatSale = (saleAmount * vat) / 100;
+      const vatCost = (costAmount * vat) / 100;
+
+      acc.totalSale += saleAmount + vatSale;
+      acc.totalCost += costAmount + vatCost;
+
+      return acc;
+    },
+    { totalSale: 0, totalCost: 0 }
+  );
+
+  const netAmount = totals.totalSale - totals.totalCost;
+
+  // -------- SAVE ----------
   const saveOrder = async () => {
+    if (!validate()) return;
+
     try {
       await api.post("/orders", order);
       alert("Order saved successfully!");
@@ -87,17 +145,68 @@ function CreateOrder() {
     <div>
       <h2>Create Order</h2>
 
+      {/* HEADER */}
       <div className="card">
-        <input placeholder="Order Number" value={order.orderNumber}
-          onChange={e => setOrder({ ...order, orderNumber: e.target.value })} />
-        <input type="date" value={order.orderDate}
-          onChange={e => setOrder({ ...order, orderDate: e.target.value })} />
-        <input type="date" value={order.executionDate}
-          onChange={e => setOrder({ ...order, executionDate: e.target.value })} />
-        <input placeholder="Customer Code" value={order.customerCode}
-          onChange={e => setOrder({ ...order, customerCode: e.target.value })} />
-        <input placeholder="Customer Name" value={order.customerName}
-          onChange={e => setOrder({ ...order, customerName: e.target.value })} />
+        <div>
+          <label>Order Number</label>
+          <input
+            placeholder="Order Number"
+            value={order.orderNumber}
+            onChange={(e) =>
+              setOrder({ ...order, orderNumber: e.target.value })
+            }
+          />
+          {errors.orderNumber && (
+            <small style={{ color: "red" }}>{errors.orderNumber}</small>
+          )}
+        </div>
+
+        <div>
+          <label>Order Date</label>
+          <input
+            type="date"
+            value={order.orderDate}
+            onChange={(e) =>
+              setOrder({ ...order, orderDate: e.target.value })
+            }
+          />
+        </div>
+
+        <div>
+          <label>Execution Date</label>
+          <input
+            type="date"
+            value={order.executionDate}
+            onChange={(e) =>
+              setOrder({ ...order, executionDate: e.target.value })
+            }
+          />
+        </div>
+
+        <div>
+          <label>Customer Code</label>
+          <input
+            placeholder="Customer Code"
+            value={order.customerCode}
+            onChange={(e) =>
+              setOrder({ ...order, customerCode: e.target.value })
+            }
+          />
+          {errors.customerCode && (
+            <small style={{ color: "red" }}>{errors.customerCode}</small>
+          )}
+        </div>
+
+        <div>
+          <label>Customer Name</label>
+          <input
+            placeholder="Customer Name"
+            value={order.customerName}
+            onChange={(e) =>
+              setOrder({ ...order, customerName: e.target.value })
+            }
+          />
+        </div>
       </div>
 
       {/* BL DETAILS */}
@@ -144,6 +253,14 @@ function CreateOrder() {
             <input type="number" placeholder="VAT %" onChange={e => updateCharge(i,"vatPercent",+e.target.value)} />
           </div>
         ))}
+      </div>
+
+      {/* TOTAL PREVIEW */}
+      <div className="card">
+        <h3>Order Summary</h3>
+        <p><b>Total Sale:</b> {totals.totalSale.toFixed(2)}</p>
+        <p><b>Total Cost:</b> {totals.totalCost.toFixed(2)}</p>
+        <p><b>Net Amount:</b> {netAmount.toFixed(2)}</p>
       </div>
 
       <button onClick={saveOrder}>💾 Save Order</button>
