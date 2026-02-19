@@ -22,4 +22,6 @@ public class OrderResponseDto {
     private Double netAmount; // totalSale - totalCost
 
     private List<ChargeDto> charges;
+    private List<OrderDetailDto> details;
+    private List<ContainerDto> containers;
 }

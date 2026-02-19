@@ -1,9 +1,13 @@
 package com.masterglobal.erp.service;
 
 import com.masterglobal.erp.dto.ChargeDto;
+import com.masterglobal.erp.dto.ContainerDto;
+import com.masterglobal.erp.dto.OrderDetailDto;
 import com.masterglobal.erp.dto.OrderResponseDto;
 import com.masterglobal.erp.dto.OrderSummaryReportDto;
+import com.masterglobal.erp.entity.Container;
 import com.masterglobal.erp.entity.Order;
+import com.masterglobal.erp.entity.OrderDetail;
 import com.masterglobal.erp.repository.OrderRepository;
 import jakarta.transaction.Transactional;
 import org.apache.poi.ss.usermodel.Row;
@@ -109,9 +113,40 @@ public class OrderService {
         dto.setCustomerCode(order.getCustomerCode());
         dto.setCustomerName(order.getCustomerName());
 
+        // ✅ MAP BL DETAILS
+        if (order.getDetails() != null) {
+            var detailDtos = order.getDetails().stream().map(d -> {
+                OrderDetailDto dd = new OrderDetailDto();
+                dd.setBillOfLadingNo(d.getBillOfLadingNo());
+                dd.setMarks(d.getMarks());
+                dd.setDescription(d.getDescription());
+                dd.setQty(d.getQty());
+                dd.setWeight(d.getWeight());
+                dd.setVolume(d.getVolume());
+                return dd;
+            }).toList();
+
+            dto.setDetails(detailDtos);
+        }
+
+        // ✅ MAP CONTAINERS
+        if (order.getContainers() != null) {
+            var containerDtos = order.getContainers().stream().map(c -> {
+                ContainerDto cd = new ContainerDto();
+                cd.setBillNumber(c.getBillNumber());
+                cd.setContainerNumber(c.getContainerNumber());
+                cd.setSealNumber(c.getSealNumber());
+                cd.setWeight(c.getWeight());
+                return cd;
+            }).toList();
+
+            dto.setContainers(containerDtos);
+        }
+
         double totalSale = 0;
         double totalCost = 0;
 
+        // ✅ MAP CHARGES
         if (order.getCharges() != null) {
             var chargeDtos = order.getCharges().stream().map(c -> {
                 ChargeDto cd = new ChargeDto();
@@ -142,6 +177,7 @@ public class OrderService {
 
         return dto;
     }
+
 
     // =========================
     // SUMMARY REPORT
