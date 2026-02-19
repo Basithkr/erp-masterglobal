@@ -28,39 +28,41 @@ public class SecurityConfig {
                         // Allow preflight
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                        // Allow login endpoint (adjust if your path is different)
+                        // Allow login endpoint
                         .requestMatchers("/login", "/api/auth/**").permitAll()
 
-                        // Allow frontend static files if any
+                        // Allow frontend static files
                         .requestMatchers("/", "/index.html", "/assets/**").permitAll()
 
-                        // For now allow all APIs (you can secure later)
+                        // For now allow all
                         .anyRequest().permitAll()
                 );
 
         return http.build();
     }
 
-    // ✅ Password encoder for DB users
+    // ✅ SINGLE PasswordEncoder bean in the whole app
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
-    // ✅ Needed for authentication manager (login)
+    // ✅ Authentication manager (for login)
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
 
-    // ✅ CORS config (allow your frontend + public IP)
+    // ✅ CORS config
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
 
         config.setAllowedOrigins(List.of(
                 "http://localhost:80",
-                "http://13.127.245.127"   // your EC2 public IP frontend
+                "http://13.127.245.127",
+                "http://master-global-erp.xyz",
+                "http://www.master-global-erp.xyz"
         ));
 
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
