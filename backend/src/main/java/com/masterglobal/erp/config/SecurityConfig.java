@@ -41,19 +41,19 @@ public class SecurityConfig {
         return http.build();
     }
 
-    // ✅ SINGLE PasswordEncoder bean in the whole app
+    // SINGLE PasswordEncoder bean in the whole app
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
-    // ✅ Authentication manager (for login)
+    // Authentication manager (for login)
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
 
-    // ✅ CORS config
+    // CORS config
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();

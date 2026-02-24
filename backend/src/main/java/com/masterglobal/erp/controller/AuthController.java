@@ -29,7 +29,7 @@ public class AuthController {
         AppUser user = userRepo.findByUsername(username)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid username or password"));
 
-        // ✅ Compare raw password with bcrypt hash
+        // Compare raw password with bcrypt hash
         if (!passwordEncoder.matches(password, user.getPassword())) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid username or password");
         }

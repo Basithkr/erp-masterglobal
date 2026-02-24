@@ -113,7 +113,7 @@ public class OrderService {
         dto.setCustomerCode(order.getCustomerCode());
         dto.setCustomerName(order.getCustomerName());
 
-        // ✅ MAP BL DETAILS
+        // MAP BL DETAILS
         if (order.getDetails() != null) {
             var detailDtos = order.getDetails().stream().map(d -> {
                 OrderDetailDto dd = new OrderDetailDto();
@@ -129,7 +129,7 @@ public class OrderService {
             dto.setDetails(detailDtos);
         }
 
-        // ✅ MAP CONTAINERS
+        // MAP CONTAINERS
         if (order.getContainers() != null) {
             var containerDtos = order.getContainers().stream().map(c -> {
                 ContainerDto cd = new ContainerDto();
@@ -146,7 +146,7 @@ public class OrderService {
         double totalSale = 0;
         double totalCost = 0;
 
-        // ✅ MAP CHARGES
+        // MAP CHARGES
         if (order.getCharges() != null) {
             var chargeDtos = order.getCharges().stream().map(c -> {
                 ChargeDto cd = new ChargeDto();

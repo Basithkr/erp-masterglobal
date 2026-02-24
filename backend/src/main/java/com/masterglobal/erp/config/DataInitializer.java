@@ -16,11 +16,11 @@ public class DataInitializer {
             if (userRepo.findByUsername("admin").isEmpty()) {
                 AppUser user = new AppUser();
                 user.setUsername("admin");
-                user.setPassword(encoder.encode("admin123")); // ✅ BCrypt encoded
+                user.setPassword(encoder.encode("admin123")); // BCrypt encoded
                 user.setRole("ADMIN");
                 userRepo.save(user);
 
-                System.out.println("✅ Default user created: admin / admin123");
+                System.out.println("Default user created: admin / admin123");
             }
         };
     }
