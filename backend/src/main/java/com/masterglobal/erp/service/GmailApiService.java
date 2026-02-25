@@ -11,8 +11,6 @@ import com.google.api.services.gmail.GmailScopes;
 import com.google.api.services.gmail.model.Message;
 import com.google.common.io.BaseEncoding;
 import org.springframework.stereotype.Service;
-//import com.google.api.client.extensions.jetty.auth.oauth2.LocalServerReceiver;
-//import com.google.api.client.extensions.java6.auth.oauth2.AuthorizationCodeInstalledApp;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -26,9 +24,9 @@ public class GmailApiService {
     private static final GsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
     private static final List<String> SCOPES = Collections.singletonList(GmailScopes.GMAIL_SEND);
 
-    // ✅ Path INSIDE docker container
+    // Inside container paths
     private static final String TOKENS_DIRECTORY_PATH = "/app/tokens";
-//    private static final String TOKENS_DIRECTORY_PATH = "tokens";
+    private static final String CREDENTIALS_PATH = "/app/secrets/google-credentials.json";
 
     private Gmail gmailService;
 
@@ -39,14 +37,18 @@ public class GmailApiService {
 
         final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
 
-        InputStream in = getClass().getClassLoader().getResourceAsStream("google-credentials.json");
-        if (in == null) {
-            throw new FileNotFoundException("google-credentials.json not found in src/main/resources");
+        // 🔹 Load credentials from file system (NOT classpath)
+        File credFile = new File(CREDENTIALS_PATH);
+        if (!credFile.exists()) {
+            throw new FileNotFoundException("google-credentials.json not found at " + CREDENTIALS_PATH);
         }
+
+        InputStream in = new FileInputStream(credFile);
 
         GoogleClientSecrets clientSecrets =
                 GoogleClientSecrets.load(JSON_FACTORY, new InputStreamReader(in));
 
+        // 🔹 Ensure tokens directory exists
         File tokensDir = new File(TOKENS_DIRECTORY_PATH);
         if (!tokensDir.exists()) {
             tokensDir.mkdirs();
@@ -62,22 +64,9 @@ public class GmailApiService {
 
         if (credential == null) {
             throw new RuntimeException(
-                    "No Gmail OAuth token found. Generate it locally first (outside Docker)."
+                    "No Gmail OAuth token found in /app/tokens. Copy tokens from local machine."
             );
         }
-
-//        if (credential == null) {
-//            System.out.println("No Gmail OAuth token found. Opening browser for authorization...");
-//
-//            LocalServerReceiver receiver = new LocalServerReceiver.Builder()
-//                    .setPort(8888)
-//                    .build();
-//
-//            credential = new AuthorizationCodeInstalledApp(flow, receiver)
-//                    .authorize("user");
-//
-//            System.out.println("Gmail OAuth token generated and saved to: " + TOKENS_DIRECTORY_PATH);
-//        }
 
         gmailService = new Gmail.Builder(HTTP_TRANSPORT, JSON_FACTORY, credential)
                 .setApplicationName(APPLICATION_NAME)
