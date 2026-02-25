@@ -1,7 +1,7 @@
 import axios from "axios";
 
 export const api = axios.create({
-  baseURL: "/api",   // 👈 relative path, goes to nginx, then to backend
+  baseURL: "/api",   // 👈 goes to nginx, then proxied to backend
 });
 
 // Attach token to every request automatically
