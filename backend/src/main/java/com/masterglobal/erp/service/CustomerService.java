@@ -18,7 +18,19 @@ public class CustomerService {
     @Autowired
     private EmailService emailService;
 
+    @Autowired
+    private OtpService otpService;
+
     public Customer save(Customer c) {
+
+        if (c.getEmail() == null || c.getEmail().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email is required for verification");
+        }
+
+        // ✅ Check OTP verification
+        if (!otpService.isEmailVerified(c.getEmail())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email is not verified via OTP");
+        }
 
         if (repo.existsByCode(c.getCode())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Customer code already exists");
@@ -40,12 +52,11 @@ public class CustomerService {
 
         Customer saved = repo.save(c);
 
+        // ✅ Send Gmail API notification
         try {
-            if (saved.getEmail() != null && !saved.getEmail().isEmpty()) {
-                emailService.sendCustomerWelcomeMail(saved.getEmail(), saved.getName());
-            }
+            emailService.sendCustomerWelcomeMail(saved.getEmail(), saved.getName());
         } catch (Exception e) {
-            e.printStackTrace();
+            e.printStackTrace(); // don't fail customer creation because of mail
         }
 
         return saved;

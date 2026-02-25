@@ -1,26 +1,31 @@
 package com.masterglobal.erp.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
 @Service
 public class EmailService {
 
     @Autowired
-    private JavaMailSender mailSender;
+    private GmailApiService gmailApiService;
 
     public void sendCustomerWelcomeMail(String toEmail, String customerName) {
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setTo(toEmail);
-        message.setSubject("Customer Created - MasterGlobal ERP");
-        message.setText(
+        String subject = "Customer Created - MasterGlobal ERP";
+        String body =
                 "Dear " + customerName + ",\n\n" +
                         "Your customer profile has been successfully created.\n\n" +
-                        "Regards,\nMasterGlobal Logistics"
-        );
+                        "Regards,\nMasterGlobal Logistics";
 
-        mailSender.send(message);
+        gmailApiService.sendEmail(toEmail, subject, body);
+    }
+
+    public void sendOtpMail(String toEmail, String otp) {
+        String subject = "Your OTP - MasterGlobal ERP";
+        String body =
+                "Your OTP is: " + otp + "\n\n" +
+                        "This OTP is valid for 5 minutes.\n\n" +
+                        "Regards,\nMasterGlobal Logistics";
+
+        gmailApiService.sendEmail(toEmail, subject, body);
     }
 }
