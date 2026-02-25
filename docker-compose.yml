@@ -24,6 +24,8 @@ services:
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: 1234
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
+    volumes:
+      - ./backend/tokens:/app/tokens   # ✅ MOUNT TOKENS
     depends_on:
       - db
     networks:
