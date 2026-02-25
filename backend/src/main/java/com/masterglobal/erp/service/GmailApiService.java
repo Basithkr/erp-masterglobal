@@ -24,8 +24,9 @@ public class GmailApiService {
     private static final GsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
     private static final List<String> SCOPES = Collections.singletonList(GmailScopes.GMAIL_SEND);
 
-    // Tokens path inside container
+    // Inside container paths
     private static final String TOKENS_DIRECTORY_PATH = "/app/tokens";
+    private static final String CREDENTIALS_PATH = "/app/secrets/google-credentials.json";
 
     private Gmail gmailService;
 
@@ -36,14 +37,18 @@ public class GmailApiService {
 
         final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
 
-        InputStream in = getClass().getClassLoader().getResourceAsStream("google-credentials.json");
-        if (in == null) {
-            throw new FileNotFoundException("google-credentials.json not found in resources");
+        // 🔹 Load credentials from file system (NOT classpath)
+        File credFile = new File(CREDENTIALS_PATH);
+        if (!credFile.exists()) {
+            throw new FileNotFoundException("google-credentials.json not found at " + CREDENTIALS_PATH);
         }
+
+        InputStream in = new FileInputStream(credFile);
 
         GoogleClientSecrets clientSecrets =
                 GoogleClientSecrets.load(JSON_FACTORY, new InputStreamReader(in));
 
+        // 🔹 Ensure tokens directory exists
         File tokensDir = new File(TOKENS_DIRECTORY_PATH);
         if (!tokensDir.exists()) {
             tokensDir.mkdirs();
@@ -58,7 +63,9 @@ public class GmailApiService {
         var credential = flow.loadCredential("user");
 
         if (credential == null) {
-            throw new RuntimeException("No Gmail OAuth token found in /app/tokens. Copy tokens from local machine.");
+            throw new RuntimeException(
+                    "No Gmail OAuth token found in /app/tokens. Copy tokens from local machine."
+            );
         }
 
         gmailService = new Gmail.Builder(HTTP_TRANSPORT, JSON_FACTORY, credential)
