@@ -60,24 +60,24 @@ public class GmailApiService {
 
         var credential = flow.loadCredential("user");
 
-        if (credential == null) {
-            throw new RuntimeException(
-                    "No Gmail OAuth token found. Generate it locally first (outside Docker)."
-            );
-        }
-
 //        if (credential == null) {
-//            System.out.println("No Gmail OAuth token found. Opening browser for authorization...");
-//
-//            LocalServerReceiver receiver = new LocalServerReceiver.Builder()
-//                    .setPort(8888)
-//                    .build();
-//
-//            credential = new AuthorizationCodeInstalledApp(flow, receiver)
-//                    .authorize("user");
-//
-//            System.out.println("Gmail OAuth token generated and saved to: " + TOKENS_DIRECTORY_PATH);
+//            throw new RuntimeException(
+//                    "No Gmail OAuth token found. Generate it locally first (outside Docker)."
+//            );
 //        }
+
+        if (credential == null) {
+            System.out.println("No Gmail OAuth token found. Opening browser for authorization...");
+
+            LocalServerReceiver receiver = new LocalServerReceiver.Builder()
+                    .setPort(8888)
+                    .build();
+
+            credential = new AuthorizationCodeInstalledApp(flow, receiver)
+                    .authorize("user");
+
+            System.out.println("Gmail OAuth token generated and saved to: " + TOKENS_DIRECTORY_PATH);
+        }
 
         gmailService = new Gmail.Builder(HTTP_TRANSPORT, JSON_FACTORY, credential)
                 .setApplicationName(APPLICATION_NAME)

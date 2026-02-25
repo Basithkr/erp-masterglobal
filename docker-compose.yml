@@ -19,6 +19,7 @@ services:
     container_name: erp-backend
     ports:
       - "8080:8080"
+      - "8888:8888"   # 👈 TEMP for Google OAuth
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/masterglobal_erp
       SPRING_DATASOURCE_USERNAME: postgres
